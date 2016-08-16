@@ -1,0 +1,139 @@
+#!/bin/bash
+# BASH BABAYYYY
+
+# Package Managers
+APTITUDE="aptitude"
+YUM="yum"
+PACMAN="pacman"
+
+# Colour Codes
+RESET='\e[0m'
+
+GREEN='\e[0;32m'
+LIGHT_GREEN='\e[1;32m'
+
+BLUE='\e[0;34m'
+LIGHT_BLUE='\e[1;34m'
+
+RED='\e[0;31m'
+LIGHT_RED='\e[1;31m'
+
+PURPLE='\e[0;35m'
+LIGHT_PURPLE='\e[1;35m'
+
+GREY='\e[0;30m'
+LIGHT_GREY='\e[0;37m'
+
+YELLOW='\e[0;33m'
+LIGHT_YELLOW='\e[1;33m'
+
+WHITE='\e[1;37m'
+
+
+# Functions
+function count() {
+	echo $#
+}
+
+function echoln() {
+	printf "$@\n"
+}
+
+function check() {
+	if hash $1 2>/dev/null
+		then
+			echo "yup"
+		else
+			echo "nope"
+	fi
+}
+
+function filter_by_check() {
+	for i in "$@"; do
+		if [ "$(check $i)" = "yup" ]; then
+			echo $i
+		fi
+	done
+}
+
+function guess_package_manager() {
+	for i in $(filter_by_check $@); do
+		if [ "$i" = "apt-get" ]; then
+			echo $APTITUDE
+		elif [ "$i" = "yum" ]; then
+			echo $YUM
+		elif [ "$i" = "pacman" ]; then
+			echo $PACMAN
+		fi
+	done
+}
+
+function list_managers() {
+	count=1
+	for i in "$@"; do
+		echoln "$count. $i"
+		count=$((count+1))
+	done
+}
+
+function get_manager() {
+	last_index=$#
+	target_index=${!last_index}
+	echo ${!target_index}
+}
+
+function get_installer() {
+	if [ "$1" = "$APTITUDE" ]; then
+		echo "apt-get install"
+	elif [ "$1" = "$YUM" ]; then
+		echo "yum install"
+	elif [ "$1" = "$PACMAN" ]; then
+		echo "pacman -S"
+	fi
+}
+
+function is_comment() {
+	if [ "$1" = "#" ]; then
+		echo "yup"
+	else
+		echo "nope"
+	fi
+}
+
+function read_lines() {
+	while IFS='' read -r line || [[ -n "$line" ]]; do
+		if [ "$(is_comment $line)" = "nope" ]; then
+			echoln "$line"
+		fi
+	done < "$1"
+}
+
+
+
+echoln " ____    ____  _____ __ __  _____  __ __  _     "
+echoln "|    \  /    |/ ___/|  |  ||     ||  |  || |    "
+echoln "|  o  )|  o  (   \_ |  |  ||   __||  |  || |    "
+echoln "|     ||     |\__  ||  _  ||  |_  |  |  || |___ "
+echoln "|  O  ||  _  |/  \ ||  |  ||   _] |  :  ||     |"
+echoln "|     ||  |  |\    ||  |  ||  |   |     ||     |"
+echoln "|_____||__|__| \___||__|__||__|    \__,_||_____|"
+echoln ""
+echoln "    > created by Hamizmz. 2016 I think."
+echoln ""
+
+# The Meat and The Potatoes
+echoln "Attempting to detect your package management system..."
+MANAGER="$(guess_package_manager apt-get yum pacman)"
+
+# Tell user what we have installed.
+if [ $(count $MANAGER) -gt 1 ]; then
+	echoln "You have more than one package manager installed:"
+	echo "$(list_managers $MANAGER)"
+	read -p "Please select: " option
+	MANAGER=$(get_manager $MANAGER $option)
+	echoln "Amazing!  You have chosen: $MANAGER"
+else
+	echoln "It looks like you have $MANAGER installed."
+fi
+
+read_lines "$1/runme"
